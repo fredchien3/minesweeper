@@ -1,11 +1,12 @@
 class Tile
-    attr_reader :bomb, :revealed, :neighboring_positions
+    attr_reader :bomb, :revealed, :neighboring_positions, :flagged
     attr_accessor :value
 
     def initialize(chance) # initializes the tile with a default 10% chance of bomb
         rand <= chance ? @bomb = true : @bomb = false
         @revealed = false
         @value = 0
+        @flagged = false
         @neighboring_positions = Array.new
     end
 
@@ -26,6 +27,10 @@ class Tile
         @neighboring_positions.select! do |position|
             position[0].between?(0, board_size-1) && position[1].between?(0, board_size-1)
         end
+    end
+
+    def flag!
+        @flagged = !@flagged
     end
 
 end

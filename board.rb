@@ -32,6 +32,7 @@ class Board
 
     def render(godmode=false)
         system("clear")
+        
         print "  "
         (0..8).each do |num|
             print num
@@ -41,17 +42,20 @@ class Board
         @grid.each_with_index do |row, i|
             print i.to_s + " "
             row.each do |tile|
+                
                 if godmode
                     tile.bomb ? (print "B".colorize(:red) ) : (print tile.value)
+
+                elsif tile.flagged
+                    print "F".colorize(:blue)
+                elsif tile.revealed && tile.bomb
+                    print "B".colorize(:red)
                 elsif tile.revealed
-                    if tile.bomb
-                        print "B".colorize(:red)
-                    elsif
-                        tile.value == 0 ? (print "▢") : (print tile.value)
-                    end
+                    tile.value == 0 ? (print "▢") : (print tile.value)
                 else                    
                     print "▥"
                 end
+                
                 print " "
             end
             puts
@@ -65,11 +69,9 @@ class Board
 
     def reveal_tile(row, col)
         tile = @grid[row][col]
-
         tile.reveal!
 
         if tile.bomb # if tile is a bomb, game over.
-            puts "BOOM!"
             self.explode!
         end
         
@@ -83,7 +85,6 @@ class Board
         tile.neighboring_positions.each do |position|
             nrow, ncol = *position              
             ntile = @grid[nrow][ncol]
-            # ntile.reveal!
             next if ntile.revealed
             reveal_tile(nrow, ncol)
         end
@@ -97,6 +98,16 @@ class Board
     #         ntile.bomb
     #     end
     # end
+
+    def flag_tile(row, col)
+        tile = @grid[row][col]
+
+        if tile.revealed
+            puts "Tile is already revealed."
+        else
+            tile.flag!
+        end
+    end
 
     def explode!
         @exploded = true
