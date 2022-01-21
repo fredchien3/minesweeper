@@ -4,7 +4,7 @@ require 'byebug'
 
 class Board
     attr_reader :size, :grid, :exploded
-    def initialize(size, chance)
+    def initialize(size=9, chance=0.1)
         @size = size
         @grid = Array.new(@size) { Array.new(@size) { Tile.new(chance) } }
         self.populate!
@@ -22,7 +22,6 @@ class Board
                 tile.neighboring_positions.each do |position|
                     nrow, ncol = *position
                     neighbor = @grid[nrow][ncol]
-
                     tile.value += 1 if neighbor.bomb
                 end
 
@@ -43,8 +42,14 @@ class Board
             row.each do |tile|
                 if godmode
                     tile.bomb ? (print "B".colorize(:red) ) : (print tile.value)
-                else
-                    tile.revealed ? (print "▢") : (print "▥")
+                elsif tile.revealed
+                    if tile.bomb
+                        print "B".colorize(:red)
+                    elsif
+                        tile.value == 0 ? (print "▢") : (print tile.value)
+                    end
+                else                    
+                    print "▥"
                 end
                 print " "
             end
@@ -59,36 +64,37 @@ class Board
 
     def reveal_tile(row, col)
         tile = @grid[row][col]
+
+        tile.reveal!
+
         if tile.bomb # if tile is a bomb, game over.
             self.explode!
-            break
-        else
-            tile.reveal!
+            print "BOMB HAS EXPLODED"
         end
+        
+        return if tile.value > 0
 
-        if no_neighbor_bombs?(row, col)
-            reveal_all_tile_neighbors(row, col)
-        else
-            
-        end
-
+        reveal_all_tile_neighbors(row, col)
+        
     end
 
-    def no_neighbor_bombs?(row, col) # if the tile at this position has no bombs adjacent
-        tile = @grid[row][col]
-        tile.neighboring_positions.none? do |position|
-            nrow, ncol = *position
-            ntile = @grid[nrow][ncol]
-            ntile.bomb
-        end
-    end
+    # def no_neighbor_bombs?(row, col)
+    #     tile = @grid[row][col]
+    #     tile.neighboring_positions.none? do |position|
+    #         nrow, ncol = *position
+    #         ntile = @grid[nrow][ncol]
+    #         ntile.bomb
+    #     end
+    # end
 
-    def reveal_all_tile_neighbors(row, col) # reveal the neighbors of the tile at this position
+    def reveal_all_tile_neighbors(row, col)
         tile = @grid[row][col]
         tile.neighboring_positions.each do |position|
             nrow, ncol = *position              
             ntile = @grid[nrow][ncol]
-            ntile.reveal!
+            # ntile.reveal!
+            next if ntile.revealed
+            reveal_tile(nrow, ncol)
         end
     end
 
