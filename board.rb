@@ -7,30 +7,31 @@ class Board
     def initialize(size=9, chance=0.1)
         @size = size
         @grid = Array.new(@size) { Array.new(@size) { Tile.new(chance) } }
-        self.populate!
-        true
+        @non_bomb_tiles = Array.new
         @exploded = false
+        self.populate!
     end
 
     def populate!
         (0...@size).each do |row|
             (0...@size).each do |col|
-
                 tile = @grid[row][col]
+                if !tile.bomb
+                    @non_bomb_tiles << tile 
+                end
                 tile.get_neighboring_positions!(row, col, @size)
-
                 tile.neighboring_positions.each do |position|
                     nrow, ncol = *position
                     neighbor = @grid[nrow][ncol]
                     tile.value += 1 if neighbor.bomb
                 end
-
             end
         end
-
+        true
     end
 
     def render(godmode=false)
+        system("clear")
         print "  "
         (0..8).each do |num|
             print num
@@ -68,24 +69,14 @@ class Board
         tile.reveal!
 
         if tile.bomb # if tile is a bomb, game over.
+            puts "BOOM!"
             self.explode!
-            print "BOMB HAS EXPLODED"
         end
         
         return if tile.value > 0
 
         reveal_all_tile_neighbors(row, col)
-        
     end
-
-    # def no_neighbor_bombs?(row, col)
-    #     tile = @grid[row][col]
-    #     tile.neighboring_positions.none? do |position|
-    #         nrow, ncol = *position
-    #         ntile = @grid[nrow][ncol]
-    #         ntile.bomb
-    #     end
-    # end
 
     def reveal_all_tile_neighbors(row, col)
         tile = @grid[row][col]
@@ -98,8 +89,21 @@ class Board
         end
     end
 
+    # def no_neighbor_bombs?(row, col)
+    #     tile = @grid[row][col]
+    #     tile.neighboring_positions.none? do |position|
+    #         nrow, ncol = *position
+    #         ntile = @grid[nrow][ncol]
+    #         ntile.bomb
+    #     end
+    # end
+
     def explode!
         @exploded = true
+    end
+
+    def solved?
+        @non_bomb_tiles.all? { |tile| tile.revealed }
     end
 
 end

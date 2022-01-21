@@ -28,6 +28,4 @@ class Tile
         end
     end
 
-
-
 end
